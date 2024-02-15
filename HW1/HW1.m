@@ -82,6 +82,16 @@ clear;
 figure();
 fplot(@(x) x/2, [0 2])
 
+%% QUESTION 6
+clear;
+
+Px = [2 1;
+      1 4];
+[V, D] = eigs(Px);
+lambda = diag(D);
+Pa1 = (1/sqrt(lambda(1))) * (V(:,1)/norm(V(:,1)));
+Pa2 = (1/sqrt(lambda(2))) * (V(:,2)/norm(V(:,2)));
+
 %% FUNCTIONS
 function [pdf, shift_range] = dice_sim(die, N)
     pmf = groupcounts(die)./length(die);
