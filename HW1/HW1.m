@@ -197,6 +197,9 @@ legend('c = 0.25', 'c = 1', 'c = 1.5');
 
 fx = @(c) ((2*pi)^(size(Px,1)/2) * det(Px)^(1/2))^(-1) .* exp(-1/2.*(c.^2));
 probs = fx(c);
+fprintf('The probability for c = 0.25: %0.3g\n', probs(1));
+fprintf('The probability for c = 1: %0.3g\n', probs(2));
+fprintf('The probability for c = 1.5: %0.3g\n\n', probs(3));
 
 %% QUESTION 7
 clear;
