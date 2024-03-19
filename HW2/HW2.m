@@ -63,21 +63,32 @@ fprintf('c) 1000 Sample; Monte Carlo Least Squares Sigma: [%0.3g %0.3g]\n', sigm
 
 % (D)
 xr = zeros(2,N2);
-xr(:,1) = xc(:,end);
+
+% Simulation
+nd = sigma_n*randn(N2,1);       % Noise
+rd = 100*sin(w2*t2)';           % Sine Wave
+gd = a*rd + b*ones(N2,1) + nd;  % Gyroscope Measurements
+
 R = diag([sigma_n, sigma_n]);
-P = R;
-batch = 10;
-for i = 1:batch:N2-batch
-    Hk = Hc(i:i+1,:);
+batch = 2;
+
+Hd = Hc(1:batch,:);
+xr(:,1) = pinv(Hd)*gd(1:batch);
+P = inv(Hd'*Hd);
+
+idx = 2;
+for i = batch:batch:N2-batch
+    Hd = Hc(i:i+batch-1,:);
     % Kk = P*Hk'*inv(Hk*P*Hk' + R);
     % P = (eye(2) - Kk*Hk)*P;
-    P = inv(inv(P) + Hk'*inv(R)*Hk);
-    Kk = P*Hk'*inv(R);
-    xr(:,i+1) = xr(:,i) + Kk*(g2(i:i+1) - Hk*xr(:,i));
+    P = inv(inv(P) + Hd'*inv(R)*Hd);
+    K = P*Hd'*inv(R);
+    xr(:,idx) = xr(:,idx-1) + K*(gd(i:i+batch-1) - Hd*xr(:,idx-1));
 end
 
 figure();
 plot(xr');
+
 %% PART 4
 clear; close all; clc;
 
@@ -88,8 +99,8 @@ dend = [1 -1.9 0.95];           % Discrete TF Denominator
 tfd = tf(numd, dend);           % Discrete TF
 u = randn(N,1);                 % Input Noise
 y = dlsim(numd,dend,u);         % Output Simulation
-sigma1 = 0.01;                   % Output Noise Standard Deviation
-Y = y + sigma1*randn(N,1);       % Output w/ Noise
+sigma1 = 0.01;                  % Output Noise Standard Deviation
+Y = y + sigma1*randn(N,1);      % Output w/ Noise
 
 Ha = [-Y(2:end-1) -Y(1:end-2) u(2:end-1) u(1:end-2)];
 xa = pinv(Ha)*Y(3:end);
@@ -144,9 +155,13 @@ mean_x_mc2 = mean(x_mc2,2);
 %% PART V
 clear;
 Tw = 1;
-A = 1;
+A = 0.1;
 wc = 2;     % [rad/s]
 w1 = -10:0.01:10; % [rad/s]
+
+syms w
+Sw = piecewise(abs(w) <= wc, A, abs(w) > wc, 0);
+G = abs(1./(Tw*w1 + 1));
 
 for i = 1:length(w1)
     if abs(w1(i)) < wc
@@ -159,10 +174,33 @@ end
 Sy2 = A./(Tw.*w1 + 1);
 
 figure();
+fplot(Sw, [-10 10], 'LineWidth', 2);
+xlabel('Frequency [rad/s]');
+ylabel('Magnitude');
+title('PSD of Noise');
+xline(-wc, '--k','LineWidth', 2);
+xline(wc, '--k','LineWidth', 2);
+ylim([-A*2 A*2])
+ax = gca;
+ax.FontSize = 18;
+
+figure();
+plot(w1, G, 'LineWidth', 2);
+xlabel('Frequency [rad/s]');
+ylabel('|G(jw)|');
+title('|G(jw)| vs. Frequency');
+ax = gca;
+ax.FontSize = 18;
+
+figure();
 hold('on');
 plot(w1,abs(Sy1), 'LineWidth', 2);
 plot(w1,abs(Sy2), '--', 'LineWidth', 2);
+xline(-wc, '--k','LineWidth', 2);
+xline(wc, '--k','LineWidth', 2);
 xlabel('Frequency [rad/s]');
 ylabel('Sy');
 title('Sy vs. Frequency');
 legend('Sy1', 'Sy2');
+ax = gca;
+ax.FontSize = 18;
