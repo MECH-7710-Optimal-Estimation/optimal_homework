@@ -62,32 +62,84 @@ fprintf('c) 1000 Sample; Monte Carlo Least Squares Mean: [%0.3g %0.3g]\n', meanc
 fprintf('c) 1000 Sample; Monte Carlo Least Squares Sigma: [%0.3g %0.3g]\n', sigmac);
 
 % (D)
-xr = zeros(2,N2);
+N3 = 1000;
+batch = 2;
+t3 = 0:(N3-1);              % Time [s]
+w3 = 2*pi/N3;               % Frequency [Hz]
+Rk = diag([sigma_n, sigma_n]);
 
 % Simulation
-nd = sigma_n*randn(N2,1);       % Noise
-rd = 100*sin(w2*t2)';           % Sine Wave
-gd = a*rd + b*ones(N2,1) + nd;  % Gyroscope Measurements
+n3 = sigma_n*randn(N3,1);       % Noise
+r3 = 100*sin(w3*t3)';           % Sine Wave
+g3 = a*r3 + b*ones(N3,1) + n3;  % Gyroscope Measurements
 
-R = diag([sigma_n, sigma_n]);
-batch = 2;
+x3 = zeros(2,(N3/batch)-1);
+P3 = zeros(2,2,(N3/batch)-1);
 
-Hd = Hc(1:batch,:);
-xr(:,1) = pinv(Hd)*gd(1:batch);
-P = inv(Hd'*Hd);
+H3 = [r3 ones(N3,1)];
 
-idx = 2;
-for i = batch:batch:N2-batch
-    Hd = Hc(i:i+batch-1,:);
-    % Kk = P*Hk'*inv(Hk*P*Hk' + R);
-    % P = (eye(2) - Kk*Hk)*P;
-    P = inv(inv(P) + Hd'*inv(R)*Hd);
-    K = P*Hd'*inv(R);
-    xr(:,idx) = xr(:,idx-1) + K*(gd(i:i+batch-1) - Hd*xr(:,idx-1));
+x3(:,1) = pinv(H3(1:batch,:))*g3(1:batch);
+P3(:,:,1) = inv(H3(1:batch,:)'*H3(1:batch,:));
+
+for i = 2:(N3/batch)-1
+    start = i*batch; stop = start + batch - 1;
+    Hk = H3(start:stop, :);
+    K = P3(:,:,i-1)*Hk'*inv(Hk*P3(:,:,i-1)*Hk' + Rk);
+    P3(:,:,i) = (eye(2) - K*Hk)*P3(:,:,i-1);
+    x3(:,i) = x3(:,i-1) + K*(g3(start:stop) - Hk*x3(:,i-1));
 end
 
+sigma3 = std(x3,0,2);
+mean3 = mean(x3,2);
+
 figure();
-plot(xr');
+t = tiledlayout(2,1);
+title(t, 'Recursive Least Squares Estimates vs. Time', 'FontSize', 20);
+nexttile(t);
+hold('on');
+plot(x3(1,:), 'LineWidth', 2);
+yline(sigma3(1) + mean3(1), '--r', 'LineWidth', 2);
+yline(-sigma3(1) + mean3(1), '--r', 'LineWidth', 2);
+xlabel('Time (s)');
+ylabel('Scale Factor Estimate');
+title('Scale Factor Estimate vs. Time');
+ax = gca;
+ax.FontSize = 18;
+
+nexttile(t);
+plot(x3(2,:), 'LineWidth', 2);
+yline(sigma3(2) + mean3(2), '--r', 'LineWidth', 2);
+yline(-sigma3(2) + mean3(2), '--r', 'LineWidth', 2);
+xlabel('Time (s)');
+ylabel('Bias Estimate');
+title('Bias Estimate vs. Time');
+ax = gca;
+ax.FontSize = 18;
+
+leg = legend('State Estimate', '1\sigma', 'Orientation', 'horizontal');
+leg.Layout.Tile = 'north';
+ax = gca;
+ax.FontSize = 18;
+
+figure();
+t = tiledlayout(2,1);
+title(t, 'Recursive Least Squares Variances vs. Time', 'FontSize', 20);
+nexttile(t);
+hold('on');
+plot(squeeze(P3(1,1,:)), 'LineWidth', 2);
+xlabel('Time (s)');
+ylabel('Scale Factor Variance');
+title('Scale Factor Variance vs. Time');
+ax = gca;
+ax.FontSize = 18;
+
+nexttile(t);
+plot(squeeze(P3(2,2,:)), 'LineWidth', 2);
+xlabel('Time (s)');
+ylabel('Bias Variance');
+title('Bias Variance vs. Time');
+ax = gca;
+ax.FontSize = 18;
 
 %% PART 4
 clear; close all; clc;
@@ -116,6 +168,8 @@ hold('on');
 bode(tfID, '--r')
 title('Truth v. SysID Bode');
 legend('Simulated', 'SysID');
+ax = gca;
+ax.FontSize = 18;
 
 figure();
 hold('on');
@@ -123,6 +177,8 @@ plot(y, 'LineWidth', 2);
 plot(yID, '--', 'LineWidth', 2);
 title('Simulated Truth v. Simulated SysID');
 legend('Truth', 'SysID');
+ax = gca;
+ax.FontSize = 18;
 
 N_mc = 10;
 x_mc1 = zeros(4,N_mc);
