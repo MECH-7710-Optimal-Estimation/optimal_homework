@@ -30,7 +30,7 @@ for i = 1:Nmc
 end
 sigmab = std(xb,0,2);       % Sample Sigma
 meanb = mean(xb,2);         % Sample Mean
-sigmab_an = sigma_n/sqrt(N1);
+sigmab_an = sqrt(sigma_n^2*inv(Hb'*Hb));
 fprintf('b) 10 Sample; Monte Carlo Least Squares Mean: [%0.3g %0.3g]\n', meanb);
 fprintf('b) 10 Sample; Monte Carlo Least Squares Sigma: [%0.3g %0.3g]\n', sigmab);
 
@@ -58,6 +58,8 @@ for i = 1:Nmc
 end
 sigmac = std(xc,0,2);       % Sample Sigma
 meanc = mean(xc,2);         % Sample Mean
+
+sigmac_an = sqrt(sigma_n^2*inv(Hc'*Hc));
 fprintf('c) 1000 Sample; Monte Carlo Least Squares Mean: [%0.3g %0.3g]\n', meanc);
 fprintf('c) 1000 Sample; Monte Carlo Least Squares Sigma: [%0.3g %0.3g]\n', sigmac);
 
@@ -121,6 +123,8 @@ leg.Layout.Tile = 'north';
 ax = gca;
 ax.FontSize = 18;
 
+exportgraphics(gcf, 'figures/p3d_state.png', 'Resolution', 300);
+
 figure();
 t = tiledlayout(2,1);
 title(t, 'Recursive Least Squares Variances vs. Time', 'FontSize', 20);
@@ -141,6 +145,8 @@ title('Bias Variance vs. Time');
 ax = gca;
 ax.FontSize = 18;
 
+exportgraphics(gcf, 'figures/p3d_variance.png', 'Resolution', 300);
+
 %% PART 4
 clear; close all; clc;
 
@@ -148,7 +154,7 @@ N = 1000;                       % Number of Samples
 
 numd = 0.25*[1 -0.8];           % Discrete TF Numerator
 dend = [1 -1.9 0.95];           % Discrete TF Denominator
-tfd = tf(numd, dend);           % Discrete TF
+tfd = tf(numd, dend, -1);           % Discrete TF
 u = randn(N,1);                 % Input Noise
 y = dlsim(numd,dend,u);         % Output Simulation
 sigma1 = 0.01;                  % Output Noise Standard Deviation
@@ -159,8 +165,9 @@ xa = pinv(Ha)*Y(3:end);
 
 numID = xa(3:4)';
 denID = [1 xa(1:2)'];
-tfID = tf(numID, denID);
+tfID = tf(numID, denID, -1);
 yID = dlsim(numID,denID,u);
+snr1 = snr(y, Y-y);
 
 figure();
 bode(tfd, '-b');
@@ -168,8 +175,8 @@ hold('on');
 bode(tfID, '--r')
 title('Truth v. SysID Bode');
 legend('Simulated', 'SysID');
-ax = gca;
-ax.FontSize = 18;
+
+exportgraphics(gcf, 'figures/p4b_bode.png', 'Resolution', 300);
 
 figure();
 hold('on');
@@ -180,6 +187,10 @@ legend('Truth', 'SysID');
 ax = gca;
 ax.FontSize = 18;
 
+exportgraphics(gcf, 'figures/p4b_tf.png', 'Resolution', 300);
+
+% snrVal = snr(y, Y - y)
+
 N_mc = 10;
 x_mc1 = zeros(4,N_mc);
 for i = 1:N_mc
@@ -189,21 +200,52 @@ for i = 1:N_mc
     Ha = [-Y(2:end-1) -Y(1:end-2) u(2:end-1) u(1:end-2)];
     x_mc1(:,i) = pinv(Ha)*Y(3:end);
 end
-sigma_x_an1 = diag(sigma1*inv(Ha'*Ha));
+sigma_x_an1 = sqrt(diag(sigma1.^2*inv(Ha'*Ha)));
 
 sigma_x_mc1 = std(x_mc1,1,2);
 mean_x_mc1 = mean(x_mc1,2);
 
-sigma1 = 0.9;
+sigma2 = 0.9;
+Y = y + sigma2*randn(N,1);      % Output w/ Noise
+
+Hd = [-Y(2:end-1) -Y(1:end-2) u(2:end-1) u(1:end-2)];
+xd = pinv(Hd)*Y(3:end);
+
+numID = xd(3:4)';
+denID = [1 xd(1:2)'];
+tfID = tf(numID, denID, -1);
+yID = dlsim(numID,denID,u);
+snr2 = snr(y, Y-y);
+
+figure();
+bode(tfd, '-b');
+hold('on');
+bode(tfID, '--r')
+title('Truth v. SysID Bode');
+legend('Simulated', 'SysID');
+
+exportgraphics(gcf, 'figures/p4d_bode.png', 'Resolution', 300);
+
+figure();
+hold('on');
+plot(y, 'LineWidth', 2);
+plot(yID, '--', 'LineWidth', 2);
+title('Simulated Truth v. Simulated SysID');
+legend('Truth', 'SysID');
+ax = gca;
+ax.FontSize = 18;
+
+exportgraphics(gcf, 'figures/p4d_tf.png', 'Resolution', 300);
+
 x_mc2 = zeros(4,N_mc);
 for i = 1:N_mc
     u = randn(N,1);
     y = dlsim(numd,dend,u);
-    Y = y + sigma1*randn(N,1);
-    Ha = [-Y(2:end-1) -Y(1:end-2) u(2:end-1) u(1:end-2)];
-    x_mc2(:,i) = pinv(Ha)*Y(3:end);
+    Y = y + sigma2*randn(N,1);
+    Hd = [-Y(2:end-1) -Y(1:end-2) u(2:end-1) u(1:end-2)];
+    x_mc2(:,i) = pinv(Hd)*Y(3:end);
 end
-sigma_x_an2 = diag(sigma1*inv(Ha'*Ha));
+sigma_x_an2 = sqrt(diag(sigma2^2*inv(Hd'*Hd)));
 
 sigma_x_mc2 = std(x_mc2,1,2);
 mean_x_mc2 = mean(x_mc2,2);
@@ -240,6 +282,8 @@ ylim([-A*2 A*2])
 ax = gca;
 ax.FontSize = 18;
 
+exportgraphics(gcf, 'figures/p5_noise_psdl.png', 'Resolution', 300);
+
 figure();
 plot(w1, G, 'LineWidth', 2);
 xlabel('Frequency [rad/s]');
@@ -247,6 +291,8 @@ ylabel('|G(jw)|');
 title('|G(jw)| vs. Frequency');
 ax = gca;
 ax.FontSize = 18;
+
+exportgraphics(gcf, 'figures/p5_gjw.png', 'Resolution', 300);
 
 figure();
 hold('on');
@@ -260,3 +306,5 @@ title('Sy vs. Frequency');
 legend('Sy1', 'Sy2');
 ax = gca;
 ax.FontSize = 18;
+
+exportgraphics(gcf, 'figures/p5_sy.png', 'Resolution', 300);

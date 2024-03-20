@@ -2,6 +2,7 @@
 \usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{cleveref}
+\usepackage{matlab-prettifier}
 \usepackage{float}
 
 \title{Optimal - HW2}
@@ -112,7 +113,7 @@ Plugging in the values calculated previously into the above equation yields:
 Because these two are not equal, the two random variables are not independent.
 
 \section*{Question II}
-The station process $x(t)$ has an autocorrelation function of the form:
+The stationary process $x(t)$ has an autocorrelation function of the form:
 \begin{center}
     $R_x(\tau) = \sigma^2 e^{\beta |\tau|}$
 \end{center}
@@ -153,14 +154,54 @@ Use least squares to identify a gyroscope scale factor $(a)$ and bias $(b)$.  Si
 \end{center}
 \subsection*{Part A}
 Perform the least squares with 10 samples (make sure to pick $\omega$ so that you get one full cycle in 10 samples.)
+\subsection*{Solution}
+To perform least squares, the above equations needs to be put into the form $y = Hx$.  The measurement vector $y$ is just $g(k)$.  The state 
+vector $x$ is $\begin{bmatrix} a \\ b \end{bmatrix}$.  Given these two vectors the $H$ matrix becomes $\begin{bmatrix} r(k) && 1 \end{bmatrix}$.
+With the system in the correct form, Least Squares can now be performed.  True values of $a = 1$ and $b=0$ were chosen for this simulation.
+Also, a frequency of $0.6283 \frac{rad}{s}$ was chosen.
+\begin{gather*}
+    \hat{x} = (H^T H)^{-1}H^T y
+\end{gather*}
+With 10 samples, this yields $\hat{x} = \begin{bmatrix} 0.999 \\ -0.0121 \end{bmatrix}$.
+
 \subsection*{Part B}
 Repeat part (a) 1000 times and calculate the mean and standard deviation of the estimate errors (this is known as a Monte Carlo Simulation).  
 Compare the results to the theoretically expected mean and standard deviation.
+\subsection*{Solution}
+A 1000 run Monte Carlo with 10 samples yields a numerical mean of $\bar{x} = \begin{bmatrix} 1 \\ -0.00465 \end{bmatrix}$ and a numerical 
+standard deviation of $\sigma_x = \begin{bmatrix} 0.00128 \\ 0.0953 \end{bmatrix}$.  The theoretical mean is just the true values of a and b
+being $\bar{x} = \begin{bmatrix} 1 \\ 0 \end{bmatrix}$ which can be seen to match the numerical solution fairly closely.  The theoretical 
+standard deviation is calcualted as follows:
+\begin{equation}
+    \sigma = \sqrt{\sigma_n^2(H^T H)^{-1}}
+\end{equation}
+where $sigma_n$ is the standard deviation on the noise.  This yields an analytical standard deviation of 
+$\sigma_x = \begin{bmatrix} 0.0013 \\ 0.0949 \end{bmatrix}$ which is very close to the numerical solution.
+
 \subsection*{Part C}
 Repeat part (a) and (b) using 1000 samples.  What does the theoretical and Monte Carlo standard deviation of the estimated errors approach?
+\subsection*{Solution}
+A single Least Squares with 1000 samples yields $\hat{x} = \begin{bmatrix} 1 \\ 0.00103 \end{bmatrix}$.  A 1000 run Monte Carlo with 1000 
+samples yields a numerical mean of $\bar{x} = \begin{bmatrix} 1 \\ 0.000186 \end{bmatrix}$ and a numerical standard deviation of 
+$\sigma_x = \begin{bmatrix} 0.000139 \\ 0.00932 \end{bmatrix}$.  The theoretical mean is still just the true values of a and b which do match 
+the numerical solution very closely.  The analytical standard deviation is calculated the same way as previously and yields 
+$\sigma_x = \begin{bmatrix} 0.000134 \\ 0.0095 \end{bmatrix}$ which is again very close to the numerical. The standard deviations approach zeros 
+given more and more samples.
+
 \subsection*{Part D}
 Set up the problem to run as a recursive least squares and plot the coefficients and theoretical standard deviation of the estimate error and 
 the actual estimate error as a function of time.
+\subsection*{Solution}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{../figures/p3d_state.png}\label{fig:p3d_state}
+    \caption{State Estimates from Recursive Least Squares}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{../figures/p3d_variance.png}\label{fig:p3d_variance}
+    \caption{State Estimates from Recursive Least Squares}
+\end{figure}
 
 \section*{Question IV}
 Least Squares for System I.D. Simulate the following discrete system with a normal random input and output noise:
@@ -169,17 +210,73 @@ Least Squares for System I.D. Simulate the following discrete system with a norm
 \end{center}
 \subsection*{Part A}
 Develop the H matrix for the least squares solution.
+\subsection*{Solution}
+Before forming the H matrix and model of input to output given the coefficients of the transfer function is needed. This process is shown below:
+\begin{gather*}
+    G(z) = \frac{b_0 z - b_1}{z^2 - a_1z + a_2} \\
+    y(k) + a_1 y(k-1) + a_2 y(k-2) = b_0 u(k-1) + b_1 u(k-2) \\
+    y(k) = -a_1 y(k-1) - a_2 y(k-2) + b_0 u(k-1) + b_1 u(k-2) \\
+    y(k+2) = -a_1 y(k+1) - a_2 y(k) + b_0 u(k+1) + b_1 u(k) \\
+    H = \begin{bmatrix} -y(k+1) && -y(k) && u(k+1) && u(k) \end{bmatrix}
+\end{gather*}
+
 \subsection*{Part B}
-use least squares to estimate the coefficients of the above Transfer Function.  How good is the fit? Plot the bode response of the I.D. TF 
+Use least squares to estimate the coefficients of the above Transfer Function.  How good is the fit? Plot the bode response of the I.D. TF 
 and the simulated TF on the same plot.  How much relative noise has been added (SNR - signal to noise ratio), plot $y$ and $Y$ on the same plot.
+\subsection*{Solution}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{../figures/p4b_bode.png}\label{fig:p4b_bode}
+    \caption{Bode Plot of True TF \& SysID TF w/ $\sigma=0.01$}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{../figures/p4b_tf.png}\label{fig:p4b_tf}
+    \caption{Plot of True TF \& SysID TF w/ $\sigma=0.01$}
+\end{figure}
+The fit of the data is fairly close.  It can be seen that the system identification model is a good approximation of the real system. The SNR value 
+for the system is 40.1726.  This is good as the signal is much stronger than the noise of the system.
+
 \subsection*{Part C}
-Repeat the estimation orocess about 10 times using new values for the noise vector each time.  Compute the mean and standard deviation of your 
+Repeat the estimation process about 10 times using new values for the noise vector each time.  Compute the mean and standard deviation of your 
 parameter estimates.  Compare the computed values of the parameter statistics with those predicted by the theory based on the known value of 
 the noise statistics.
+\subsection*{Solution}
+The 10-run Monte Carlo Simulation yields a mean $\bar{x} = \begin{bmatrix} -1.8922 \\ 0.9426 \\ 0.2497 \\ -0.1976 \end{bmatrix}$ and standard deviation 
+$\sigma = \begin{bmatrix} 0.0011 \\ 0.0011 \\ \sim 0 \\ \sim 0 \end{bmatrix}$.  The analytical equivalent mean is just the original parameters of transfer 
+function.  The analytical and numerical means appear to match fairly well, of course with a small amount of deviation.  The analytical standard deviation 
+is calculated as follows:
+\begin{equation}
+    \sigma = \sigma_n (H^T H)^{-1}
+\end{equation}
+This yields an analytical standard deviation of $\sigma = \begin{bmatrix} 0.0016 \\ 0.0016 \\ \sim 0 \\ \sim 0 \end{bmatrix}$.  This is very nearly the same 
+as the numerical solution.
+
 \subsection*{Part D}
 Now use sigma between 0.1 and 1.0 and repeat parts b and c.
+\subsection*{Solution}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{../figures/p4d_bode.png}\label{fig:p4d_bode}
+    \caption{Bode Plot of True TF \& SysID TF w/ $\sigma=0.9$}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{../figures/p4d_tf.png}\label{fig:p4d_tf}
+    \caption{Plot of True TF \& SysID TF w/ $\sigma=0.9$}
+\end{figure}
+The fit is nowhere near as good as in Part B. Truly, it isn't even a valid representation of the system at this point.  The SNR for this scenario 
+is 1.3027 meaning the noise is a lot more prevalent in this case. \\
+The Monte Carlo, utilizing the new $\sigma$ value of 0.9, yields a numerical mean of $\bar{x} = \begin{bmatrix} -0.3208 \\ -0.2968 \\ 0.2659 \\ 0.1790 \end{bmatrix}$
+which is not close to the original transfer function coefficients.  The numerical $\sigma$ for this scenario is 
+$\sigma = \begin{bmatrix} 0.0291 \\ 0.0209 \\ 0.0358 \\ 0.0285 \end{bmatrix}$.  The analytical $\sigma$ for the same scenario is 
+$\sigma = \begin{bmatrix} 0.0260 \\ 0.0255 \\ 0.0287 \\ 0.0294 \end{bmatrix}$.  While this does match the numerical solution's $\sigma$ rather closely, the 
+more important observation is that increasing the $\sigma$ on the noise greatly increases the $\sigma$ on the solution.
+
 \subsection*{Part E}
 What can you conclude about using least squares for sys id with large amounts of noise?
+\subsection*{Solution}
+Least Squares for system identification is good for low SNR systems, but it breaks down rather quickly with high SNR systems.
 
 \section*{Question V}
 Justification of white noise for certain problems. Consider two problems: (i) Simple first order low-pass filter with bandlimited white noise as the input:\\
@@ -202,12 +299,56 @@ The first case seems quite plausible, but the second case has an input with infi
 assumption simplifies the system analysis significantly, so it is important to see if the assumption is justified.  We test this with our two examples above.
 \subsection*{Part A}
 Sketch the noise PSD and $|G(j\omega)|$ for a reasonable value of $T_w$ and $\omega_c$ to compare the two cases.
+\subsection*{Solution}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{../figures/p5_noise_psd.png}\label{fig:p5_noise_psd}
+    \caption{Noise PSD}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{../figures/p5_gjw.png}\label{fig:p5_gjw}
+    \caption{$|G(j\omega)|$}
+\end{figure}
+
 \subsection*{Part B}
 Determine the $S_y(j\omega)$ for the two cases.  Sketch these too.
+\subsection*{Solution}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{../figures/p5_sy.png}\label{fig:p5_sy}
+    \caption{Sy}
+\end{figure}
+
 \subsection*{Part C}
 Determine $\left[y^2\right]$ for the two cases.
+\subsection*{Solution}
+The equation for $y$ is as follows:
+\begin{equation}
+    y = G(s)w = \frac{w}{T_w s+1}
+\end{equation}
+where $w$ is white noise.  Given this, the expectation of $y^2$ is calculated as follows:
+\begin{gather*}
+    E\left[y^2\right] = E\left[(\frac{w}{T_w s+1})(\frac{w}{T_w s+1})\right] \\
+    E\left[y^2\right] = E\left[\frac{w^2}{T_w^2 s^2 + 2T_w s + 1}\right] \\
+    E\left[y^2\right] = \frac{1}{T_w^2 s^2 + 2T_w s + 1}E\left[w^2\right] \\
+    E\left[y^2\right] = \frac{\sigma_w^2}{T_w^2 s^2 + 2T_w s + 1}
+    \sigma_y^2 = \frac{\sigma_w^2}{T_w^2 s^2 + 2T_w s + 1}
+\end{gather*}
+This is true due to the fact that $w$ is zero-mean.
+
 \subsection*{Part D}
 Use these results to justify the following statement:
 \t If the input spectrum is flat considerably beyond the system bandwidth, there is little error introduced by assuming that the input spectrum is flat out to infinity.
+\subsection*{Solution}
+Clearly from the above results the difference in bandlimited white noise, and pure, full-spectrum white noise is negligible.  So the above assumption is valid.
+
+\section*{Appendix A: MATLAB Code}
+
+\lstinputlisting[
+frame=single,
+numbers=left,
+style=Matlab-bw
+]{../HW2.m}
 
 \end{document}
