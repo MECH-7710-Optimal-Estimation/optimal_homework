@@ -30,7 +30,7 @@ for i = 2:length(time)
     A(2,3) = -(y(i-1,5) - xKF(4,i-1))*sin(xKF(3,i-1));
     A(2,4) = -cos(xKF(3,i-1));
     A(3,5) = -1;
-    Phi = eye(5) - A*dt;
+    Phi = eye(5) - A*dt; 
     % Time Update
     xp = Phi*xKF(:,i-1);
     Pp = Phi*P*Phi' + Qd;

@@ -177,6 +177,62 @@ from the website and run the filter sampled at 5 Hz
 \subsection*{Part A}
 How did you choose the covariance values for $Q_d$ (especially for the radar and gyro biases).
 \subsection*{Solution}
+Before beginning to form the state-space model of the filter the states being estimated needed to be identified.
+\begin{gather*}
+    x = \begin{bmatrix}
+        E \\ N \\ \psi \\ b_r \\ b_g
+    \end{bmatrix}
+\end{gather*}
+With the states identified, equations relating the measurements to those states need to be identified.
+\begin{gather*}
+    y = \begin{bmatrix}
+        \tilde{E} \\ \tilde{N} \\ \tilde{\psi} \\ \dot{\tilde{\psi}} \\ \tilde{V}
+    \end{bmatrix} \\
+    \tilde{E} = E + \nu_E\\
+    \tilde{N} = N + \nu_N\\
+    \tilde{\psi} = \psi + \nu_\psi\\
+    \dot{\tilde{\psi}} = \dot{\psi} + b_g + \omega_g\\
+    \tilde{V} = V + b_r + \omega_r
+\end{gather*}
+With the states and measurement equations identified, the last step before forming the state-space representation is to identify equations for the state derivatives.
+\begin{gather*}
+    \dot{E} = V\sin(\psi) = (\tilde{V} - b_r - \omega_r)\sin(\psi)\\
+    \dot{N} = V\cos(\psi) = (\tilde{V} - b_r - \omega_r)\cos(\psi)\\
+    \dot{\psi} = \dot{\psi} = \dot{\tilde{\psi}} - b_g - \omega_g\\
+    \dot{b_r} = 0\\
+    \dot{b_g} = 0
+\end{gather*}
+With all the equations identified, the state space representation can start to take form.  This begins with identifying $f(x)$ and $h(x)$ and taking their Jacobians.
+\begin{gather*}
+    \dot{x} = f(x) = \begin{bmatrix}
+        (\tilde{V} - b_r)\sin(\psi)\\
+        (\tilde{V} - b_r)\cos(\psi)\\
+        \dot{\tilde{\psi}} - b_g\\
+        0\\
+        0
+    \end{bmatrix} y = h(x) = \begin{bmatrix}
+        E\\
+        N\\
+        \psi\\
+        \dot{\psi} + b_g\\
+        V + b_r
+    \end{bmatrix}\\
+    A = \frac{\partial f}{\partial x} = \begin{bmatrix}
+        0 & 0 & (\tilde{V}-b_r)\cos(\psi) & -\sin(\psi) & 0\\
+        0 & 0 & (\tilde{V}-b_r)\cos(\psi) & -\cos(\psi) & 0\\
+        0 & 0 & 0 & 0 & -1\\
+        0 & 0 & 0 & 0 & 0\\
+        0 & 0 & 0 & 0 & 0\\
+    \end{bmatrix}\\
+    H = \frac{\partial h}{\partial x} = \begin{bmatrix}
+        1 & 0 & 0 & 0 & 0\\
+        0 & 1 & 0 & 0 & 0\\
+        0 & 0 & 1 & 0 & 0\\
+        0 & 0 & 0 & 0 & 1\\
+        0 & 0 & 0 & 1 & 0\\
+    \end{bmatrix}
+\end{gather*}
+Now with all equations and Jacobians identified and solved, the normal Kalman Filter techniques can be applied.  The results are presented below.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.75\linewidth]{../figures/p3a.png}
@@ -204,6 +260,7 @@ $Q_d$ and $R_d$ were both tuned (starting at values of 1) until the estimate was
 How does the bias estimation compare to the Least Squares Solution. How does the bias estimate compare to the Recursive Least Squares solution if 
 you make the covariance $(Q_d)$ of the bias estimates equal to zero.
 \subsection*{Solution}
+The Recursive Least Squares solution used the same observation matrix presented in Part A.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.75\linewidth]{../figures/p3b.png}
