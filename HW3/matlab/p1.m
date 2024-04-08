@@ -141,8 +141,9 @@ N1 = norm(std(x_true1 - x1, 0, 2));     % Normal Kalman Filter
 N2 = norm(std(x_true1 - x2, 0, 2));     % SS Kalman Filter
 
 %% (E)
-Q_range = 0.1:0.1:10;
-R_range = 0.1:0.1:10;
+dQR = 0.5;
+Q_range = dQR:dQR:5;
+R_range = dQR:dQR:5;
 Qidx = 1;
 Ridx = 1;
 mean_error = zeros(length(Q_range), length(R_range));
@@ -156,7 +157,9 @@ for Q = Q_range
             % Measurement Update
             x3(:,i) = xp + Lss*(y1(:,i-1) - C*xp);
         end
-        mean_error(Qidx, Ridx) = norm(mean(x_true1 - x3, 2));
+        % mean_error(Qidx, Ridx) = norm(mean(x_true1 - x3, 2));
+        % mean_error(Qidx, Ridx) = norm(std(x_true1 - x3, 0, 2));
+        mean_error(Qidx, Ridx) = sqrt(std(x_true1(1,:).^2 - x3(1,:).^2) + std(x_true1(2,:).^2 - x3(2,:).^2));
         Ridx = Ridx + 1;
     end
     Qidx = Qidx + 1;

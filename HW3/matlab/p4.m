@@ -15,9 +15,9 @@ B = [14;
       1];
 C = [1 0];
 
-sigmaV = sqrt(0.1);
+sigmaV = 0.1;
 
-R = sigmaV;
+R = sigmaV.^2;
 Q = diag([1 0.03]);
 
 del = heaviside(time);
@@ -102,8 +102,8 @@ Q2 = diag([2 0.06]);
 x_true2 = zeros(2,length(time));
 y2 = zeros(1,length(time));
 for i = 2:length(time)
-    x_true2(:,i) = x_true2(:, i-1) + (A*x_true2(:, i-1) + B*del(i-1)).*dt;
-    y2(:,i) = C*x_true2(:,i) + sigmaV*randn;
+    x_true2(:,i) = x_true2(:, i-1) + (A2*x_true2(:, i-1) + B2*del(i-1)).*dt;
+    y2(:,i) = C2*x_true2(:,i) + sigmaV*randn;
 end
 
 % Kalman Filter
@@ -151,21 +151,22 @@ ax.FontSize = 18;
 exportgraphics(gcf, currentFolder + "/../figures/p4b_kf.png", 'Resolution', 300);
 
 %% (C)
-sigmaN = sqrt(0.5);
-R3 = diag([sigmaV sigmaN]);
+sigmaN = 0.5;
+R3 = diag([sigmaV.^2 sigmaN.^2]);
 
 % (D)
 A3 = A;
 B3 = B;
 C3 = eye(2);
 
+% Q3 = diag([2,1]);
 Q3 = diag([2, 0.02]);
 
 % Simulation
 x_true3 = zeros(2,length(time));
 y3 = zeros(2,length(time));
 for i = 2:length(time)
-    x_true3(:,i) = x_true3(:, i-1) + (A*x_true3(:, i-1) + B*del(i-1)).*dt;
+    x_true3(:,i) = x_true3(:, i-1) + (A2*x_true3(:, i-1) + B2*del(i-1)).*dt;
     y3(:,i) = C3*x_true3(:,i) + [sigmaV sigmaN]*randn(2,1);
 end
 

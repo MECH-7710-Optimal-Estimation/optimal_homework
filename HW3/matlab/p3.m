@@ -19,9 +19,9 @@ fs = 1/dt;
 
 % (A)
 xKF = zeros(5,length(time));
-P = eye(5);
 Qd = diag([0.01 0.01 0.01 0.001 0.001]);
 Rd = diag([0.1 0.1 0.1 0.1 0.1]);
+P = Qd;
 
 for i = 2:length(time)
     A = zeros(5);
@@ -91,7 +91,7 @@ Rd2 = diag([0.1 0.1 0.1 0.1 0.1]);
 Qd2(4,4) = 0;
 Qd2(5,5) = 0;
 % P = inv(H'*Qd*H);
-P = eye(5);
+P = Qd2;
 for i = 2:round((N/batch))
     start = i*batch; stop = start + batch - 1;
     K = (P*H')/(H*P*H' + Rd2);
@@ -131,9 +131,9 @@ exportgraphics(gcf, currentFolder + "/../figures/p3b.png", 'Resolution', 300);
 
 %% (C)
 xKF2 = zeros(5,length(time));
-P = eye(5);
 Qd = diag([0.01 0.01 0.01 0.001 0.001]);
 Rd = diag([0.1 0.1 0.1 0.1 0.1]);
+P = Qd;
 for i = 2:length(time)
     A = zeros(5);
     A(1,3) =  (y(i-1,5) - xKF2(4,i-1))*cos(xKF2(3,i-1));

@@ -352,7 +352,7 @@ Redo part a. Can you estimate the slip angle correctly? Try various $Q_d$.
     \includegraphics[width=0.75\linewidth]{../figures/p4b_kf.png}
     \caption{State Estimates \& Truth vs. Time}\label{fig:p4b_kf}
 \end{figure}
-The slip angle can be estimated correctly given that the process noise on the slip angle is double from Part A.  The same was done to the process noise on the yaw-rate.  The resulting $Q_d$ is as follows:
+The slip angle cannot be estimated correctly as the process model is incorrect and there are no direct measurements of slip angle.  The best result was obtained by doubling the process noise on both states, though there is still a large bias on slip angle.  The resulting $Q_d$ is as follows:
 \begin{gather*}
     Q_d = \begin{bmatrix}
         2 & 0\\
@@ -373,6 +373,15 @@ Now lets say we have a noisy measurement of the slip angle $(\eta_k\sim N(0,0.5^
 \end{gather}
 Assuming the sensor noises are uncorrelated, what is R?
 \subsection*{Solution}
+\begin{gather*}
+    R = \begin{bmatrix}
+        \sigma_\nu & 0\\
+        0 & \sigma_\eta
+    \end{bmatrix} = \begin{bmatrix}
+        0.01 & 0\\
+        0 & 0.25
+    \end{bmatrix}
+\end{gather*}
 
 \subsection*{Part D}
 Redo part a.  What is the effect of changing the element $Q_d$ associated with the slip angle estimate.  What must $Q_d$ equal to ensure an unbiased estimate of the states (How much filtering does that provide)?
