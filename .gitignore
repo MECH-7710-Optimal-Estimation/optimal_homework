@@ -1,5 +1,7 @@
 .DS_Store
 *.asv
+*.bbl
+*.blg
 *.synctex
 *.log
 *.fls
@@ -8,3 +10,6 @@
 *.synctex.gz
 *.fls
 *.synctex(busy)
+*.run.xml
+**/figures/
+**/data/
